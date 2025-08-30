@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travel Buddy Bot</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; display: flex; height: 100vh; margin: 0; }
+    .sidebar { width: 250px; background: #ffffff; padding: 20px; border-right: 2px solid #ddd; }
+    .sidebar h2 { font-size: 18px; margin-bottom: 15px; }
+    .sidebar label { display: block; margin-top: 10px; font-weight: bold; }
+    .sidebar input, .sidebar select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; }
+
+    .chat-container { flex: 1; display: flex; flex-direction: column; }
+    .chat-box { flex: 1; padding: 20px; overflow-y: auto; }
+    .chat-message { margin: 10px 0; }
+    .bot { color: blue; }
+    .user { color: green; text-align: right; }
+
+    .input-box { display: flex; border-top: 2px solid #ddd; }
+    .input-box input { flex: 1; padding: 10px; border: none; outline: none; }
+    .input-box button { padding: 10px 20px; background: blue; color: white; border: none; cursor: pointer; }
+    .input-box button:hover { background: darkblue; }
+  </style>
+</head>
+<body>
+  <!-- Preferences Sidebar -->
+  <div class="sidebar">
+    <h2>Preferences</h2>
+    <label>Budget:</label>
+    <input type="text" id="budget" placeholder="e.g. ₹25000">
+    
+    <label>Travel Style:</label>
+    <select id="style">
+      <option value="Relax">Relax</option>
+      <option value="Adventure">Adventure</option>
+      <option value="Luxury">Luxury</option>
+      <option value="Budget">Budget</option>
+    </select>
+  </div>
+
+  <!-- Chat Section -->
+  <div class="chat-container">
+    <div class="chat-box" id="chat-box"></div>
+    <div class="input-box">
+      <input type="text" id="user-input" placeholder="Type a message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    let state = { step: "start", category: "", destination: "", days: "", members: "", tripType: "" };
+
+    function addMessage(sender, text) {
+      const div = document.createElement("div");
+      div.className = "chat-message " + (sender === "bot" ? "bot" : "user");
+      div.textContent = (sender === "bot" ? "🤖 Bot: " : "🧑 You: ") + text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
+      addMessage("user", message);
+      input.value = "";
+      processMessage(message.toLowerCase());
+    }
+
+    function processMessage(msg) {
+      const destinations = {
+        beach: ["Goa", "Maldives", "Bali", "Phuket"],
+        mountain: ["Manali", "Shimla", "Ladakh", "Swiss Alps"],
+        city: ["Paris", "New York", "Tokyo", "Dubai"]
+      };
+
+      if (state.step === "start") {
+        addMessage("bot", "Hello! I’m your Travel Buddy 🌍. Do you prefer a beach, mountain, or city trip?");
+        state.step = "category";
+      } 
+      else if (state.step === "category") {
+        if (destinations[msg]) {
+          state.category = msg;
+          addMessage("bot", `🌟 Great! You chose ${msg}. Famous ${msg} destinations are: ${destinations[msg].join(", ")}. Which one do you prefer?`);
+          state.step = "destination";
+        } else {
+          addMessage("bot", "🤖 Sorry, I didn’t get that. Try 'beach', 'mountain', or 'city'.");
+        }
+      } 
+      else if (state.step === "destination") {
+        state.destination = msg.charAt(0).toUpperCase() + msg.slice(1);
+        addMessage("bot", `✨ Awesome! Destination set: ${state.destination}. How many days do you plan for the trip?`);
+        state.step = "days";
+      } 
+      else if (state.step === "days") {
+        state.days = msg;
+        addMessage("bot", `🗓️ Got it! ${state.days} days trip. How many members are traveling?`);
+        state.step = "members";
+      } 
+      else if (state.step === "members") {
+        state.members = msg;
+        addMessage("bot", `👨‍👩‍👧 Nice! ${state.members} members. Is it a family trip or with friends?`);
+        state.step = "tripType";
+      } 
+      else if (state.step === "tripType") {
+        state.tripType = msg;
+        
+        // Fetch preferences from sidebar
+        const budget = document.getElementById("budget").value || "Not specified";
+        const style = document.getElementById("style").value || "General";
+
+        addMessage("bot", `✅ Perfect! Here’s your personalized travel plan:  
+🌍 Destination: ${state.destination}  
+🗓️ Days: ${state.days}  
+👥 Members: ${state.members}  
+🏡 Trip Type: ${state.tripType}  
+💰 Budget: ${budget}  
+✨ Travel Style: ${style}  
+
+📅 Suggested Itinerary:  
+Day 1: Arrival + Local sightseeing  
+Day 2: Adventure/Shopping based on style  
+Day 3: Relaxation + Departure`);
+        
+        state.step = "done";
+      } 
+      else {
+        addMessage("bot", "🤖 Your plan is ready! Refresh to start a new chat.");
+      }
+    }
+
+    // Start conversation automatically
+    window.onload = () => {
+      processMessage("");
+    };
+  </script>
+</body>
+</html>
