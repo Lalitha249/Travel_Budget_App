@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Place Finder Map</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #map {
+      height: 90vh;
+      width: 100%;
+    }
+    #searchBar {
+      margin: 10px;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Find a Place on the Map 🌍</h2>
+  <div id="searchBar">
+    <input type="text" id="placeInput" placeholder="Enter a place name...">
+    <button onclick="findPlace()">Search</button>
+  </div>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialize the map
+    var map = L.map('map').setView([13.0827, 80.2707], 10); // Default: Chennai
+
+    // Load OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker; // to store searched location
+
+    // Function to find place
+    function findPlace() {
+      var place = document.getElementById("placeInput").value;
+      if (!place) {
+        alert("Please enter a place name!");
+        return;
+      }
+
+      // Use Nominatim API for geocoding
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${place}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.length > 0) {
+            var lat = data[0].lat;
+            var lon = data[0].lon;
+
+            // Set map view to searched place
+            map.setView([lat, lon], 13);
+
+            // Remove old marker if exists
+            if (marker) {
+              map.removeLayer(marker);
+            }
+
+            // Add marker
+            marker = L.marker([lat, lon]).addTo(map)
+              .bindPopup(`<b>${place}</b>`).openPopup();
+          } else {
+            alert("Place not found!");
+          }
+        })
+        .catch(error => console.log("Error: " + error));
+    }
+  </script>
+</body>
+</html>
